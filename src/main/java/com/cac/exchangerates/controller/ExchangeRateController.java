@@ -29,7 +29,7 @@ public class ExchangeRateController extends AbstractController{
         try {
             BigDecimal rate = exchangeRateService.calculateRateBetweenCurrencies(baseCurrency, targetCurrency);
             return createSuccessResponse(rate);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return createErrorResponse(HttpStatus.NOT_ACCEPTABLE.toString(), e.getMessage(), null);
         }
     }
@@ -39,7 +39,7 @@ public class ExchangeRateController extends AbstractController{
         try {
             ConversionResponseDto conversion =  exchangeRateService.convertAmountBetweenCurrencies(baseCurrency, targetCurrency, amount);
             return createSuccessResponse(conversion);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return createErrorResponse(HttpStatus.NOT_ACCEPTABLE.toString(), e.getMessage(), null);
         }
     }

@@ -23,6 +23,12 @@ public class ConversionRequestServiceImpl implements ConversionRequestService {
         this.conversionRequestRepository = conversionRequestRepository;
     }
 
+    /**
+     * The method is for to save conversion requests to the database
+     * The method accepts ConversionRequestDto and creates a new ConversionRequest then saves it
+     * @param conversionRequestDto
+     * @return
+     */
     public ConversionRequestDto save(ConversionRequestDto conversionRequestDto) {
         if (null == conversionRequestDto) {
             throw new IllegalArgumentException("ConversionRequest must be provided!");
@@ -32,6 +38,13 @@ public class ConversionRequestServiceImpl implements ConversionRequestService {
         return new ConversionRequestDto(conversionRequest);
     }
 
+    /**
+     * The method is for the retrieving conversion request transactions by ID or Date with pagination
+     * @param id
+     * @param date
+     * @param pageable
+     * @return
+     */
     public List<ConversionRequestDto> getConversionRequestByIdOrDate(String id, LocalDate date, Pageable pageable) {
         if (StringUtils.isBlank(id) && date == null) {
             throw new IllegalArgumentException("Transaction ID or Transaction Date must be provided!");

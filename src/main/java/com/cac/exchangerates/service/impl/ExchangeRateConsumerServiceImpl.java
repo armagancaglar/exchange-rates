@@ -2,28 +2,34 @@ package com.cac.exchangerates.service.impl;
 
 import com.cac.exchangerates.dto.ConsumedRatesDto;
 import com.cac.exchangerates.service.ExchangeRateConsumerService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.io.File;
-import java.io.IOException;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class ExchangeRateConsumerServiceImpl implements ExchangeRateConsumerService {
 
-    public ConsumedRatesDto consumeExchangeRates() throws IOException {
-        /*
-        final String uri = "http://api.exchangeratesapi.io/v1/latest?access_key=5039dce8ee2957b8a0936edeb0cbf54f";
+    @Value("${exchange.rates.api.access.key}")
+    private String accessKey;
+
+    @Value("${exchange.rates.api.url}")
+    private String apiURL;
+    /**
+     * The method is for the retrieve the rates from a service provider
+     * @return
+     */
+    public ConsumedRatesDto consumeExchangeRates() {
+        final String uri = apiURL.concat("?access_key=").concat(accessKey);
 
         RestTemplate restTemplate = new RestTemplate();
-        ExchangeRateDto result = restTemplate.getForObject(uri, ExchangeRateDto.class);
+        return restTemplate.getForObject(uri, ConsumedRatesDto.class);
 
-
-         */
+        /*
 
         ObjectMapper objectMapper = new ObjectMapper();
         File jsonFile = new ClassPathResource("rates.json").getFile();
         return objectMapper.readValue(jsonFile, ConsumedRatesDto.class);
+
+         */
     }
 }

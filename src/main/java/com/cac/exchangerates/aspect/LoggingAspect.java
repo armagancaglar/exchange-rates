@@ -16,8 +16,8 @@ public class LoggingAspect {
             "execution(* com.cac.exchangerates.service.impl.ExchangeRateConsumerServiceImpl.*(..)) ||" +
             "execution(* com.cac.exchangerates.service.impl.ExchangeRateServiceImpl.*(..))", throwing="ex")
     public void afterThrowingAdvice(JoinPoint joinPoint, Exception ex) {
-        System.out.println("After Throwing exception in method:"+joinPoint.getSignature());
-        System.out.println("Exception is:"+ex.getMessage());
+        logger.error("After Throwing exception in method:"+joinPoint.getSignature());
+        logger.error("Exception is:"+ex.getMessage());
         logger.error(ex.getMessage(), ex);
     }
 }
