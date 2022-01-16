@@ -1,50 +1,51 @@
 package com.cac.exchangerates.models;
 
+import com.cac.exchangerates.constants.CurrencyEnum;
 import com.cac.exchangerates.dto.ConversionRequestDto;
 import lombok.Data;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
 @Entity
-@Table(name="ConversionRequest")
+@Table(name="ConversionRequest", indexes = @Index(columnList = "id, baseCurrency, date, targetCurrency"))
 public class ConversionRequest {
     @Id
     @Column(length = 36)
     private String id;
-    private String fromCurrency;
-    private String toCurrency;
+    private CurrencyEnum baseCurrency;
+    private CurrencyEnum targetCurrency;
     private LocalDate date;
+    private BigDecimal rate;
     private BigDecimal amount;
-    private BigDecimal conversion;
+    private BigDecimal price;
 
     public ConversionRequest(){
         setId(UUID.randomUUID().toString());
     }
 
-    public ConversionRequest(String id, String fromCurrency, String toCurrency, LocalDate date, BigDecimal amount, BigDecimal conversion){
+    public ConversionRequest(String id, CurrencyEnum baseCurrency, CurrencyEnum targetCurrency, LocalDate date, BigDecimal rate, BigDecimal amount, BigDecimal price){
         setId(UUID.randomUUID().toString());
         this.id = id;
-        this.fromCurrency = fromCurrency;
-        this.toCurrency = toCurrency;
+        this.baseCurrency = baseCurrency;
+        this.targetCurrency = targetCurrency;
         this.date = date;
+        this.rate = rate;
         this.amount = amount;
-        this.conversion = conversion;
+        this.price = price;
     }
 
     public ConversionRequest(ConversionRequestDto conversionRequestDto) {
         setId(UUID.randomUUID().toString());
-        this.fromCurrency = conversionRequestDto.getFromCurrency();
-        this.toCurrency = conversionRequestDto.getToCurrency();
+        this.baseCurrency = conversionRequestDto.getBaseCurrency();
+        this.targetCurrency = conversionRequestDto.getTargetCurrency();
         this.date = conversionRequestDto.getDate();
+        this.rate = conversionRequestDto.getRate();
         this.amount = conversionRequestDto.getAmount();
-        this.conversion = conversionRequestDto.getConversion();
+        this.price = conversionRequestDto.getPrice();
     }
 
 }

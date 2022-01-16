@@ -1,8 +1,9 @@
 package com.cac.exchangerates.service;
 
-import com.cac.exchangerates.constants.CurrencyCodes;
+import com.cac.exchangerates.constants.CurrencyEnum;
 import com.cac.exchangerates.dto.ConsumedRatesDto;
 import com.cac.exchangerates.dto.ConversionRequestDto;
+import com.cac.exchangerates.dto.ConversionResponseDto;
 import com.cac.exchangerates.dto.ExchangeRateDto;
 import com.cac.exchangerates.models.ExchangeRate;
 import com.cac.exchangerates.repository.ExchangeRateRepository;
@@ -17,7 +18,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.cac.exchangerates.constants.CurrencyCodes.EUR;
+import static com.cac.exchangerates.constants.CurrencyEnum.EUR;
 
 @Service
 public class ExchangeRateService {
@@ -40,15 +41,15 @@ public class ExchangeRateService {
     }
 
     public void retrieveAndSaveExchangeRates() throws IOException {
-        List<ExchangeRateDto> exchangeRateDtos = findByFromCurrencyCodeAndDate(EUR.getCode(), LocalDate.now());
+        List<ExchangeRateDto> exchangeRateDtos = findByTargetCurrencyAndDate(EUR, LocalDate.now());
 
         if(null == exchangeRateDtos || exchangeRateDtos.isEmpty()) {
             ConsumedRatesDto consumedRatesDto = exchangeRateConsumerService.consumeExchangeRates();
 
             if(null != consumedRatesDto && null != consumedRatesDto.getRates()) {
-                for(Map.Entry<String, BigDecimal> entry : consumedRatesDto.getRates().entrySet()) {
+                for(Map.Entry<CurrencyEnum, BigDecimal> entry : consumedRatesDto.getRates().entrySet()) {
                     ExchangeRate exchangeRate = new ExchangeRate(consumedRatesDto);
-                    exchangeRate.setToCurrencyCode(entry.getKey());
+                    exchangeRate.setTargetCurrency(entry.getKey());
                     exchangeRate.setRate(entry.getValue());
                     save(exchangeRate);
                 }
@@ -56,38 +57,30 @@ public class ExchangeRateService {
         }
     }
 
-    public BigDecimal convertAmountBetweenCurrencies(String fromCurrency, String toCurrency, BigDecimal amount) throws IOException {
-        BigDecimal rate = calculateRateBetweenCurrencies(fromCurrency, toCurrency);
+    public ConversionResponseDto convertAmountBetweenCurrencies(CurrencyEnum baseCurrency, CurrencyEnum targetCurrency, BigDecimal amount) throws IOException {
+        currencyValidation(baseCurrency, targetCurrency);
 
-        BigDecimal conversionPrice = rate.multiply(amount).setScale(6, RoundingMode.CEILING);
-        ConversionRequestDto conversionRequestDto = new ConversionRequestDto(fromCurrency, toCurrency, LocalDate.now(), amount, conversionPrice);
-        conversionRequestService.save(conversionRequestDto);
+        BigDecimal rate = calculateRateBetweenCurrencies(baseCurrency, targetCurrency);
 
-        return conversionPrice;
+        BigDecimal conversionPrice = rate.multiply(amount).setScale(6, RoundingMode.HALF_EVEN);
+        ConversionRequestDto conversionRequestDto = new ConversionRequestDto(baseCurrency, targetCurrency, LocalDate.now(), rate, amount, conversionPrice);
+        conversionRequestDto = conversionRequestService.save(conversionRequestDto);
+
+        return new ConversionResponseDto(conversionRequestDto);
     }
 
-    public BigDecimal calculateRateBetweenCurrencies(String fromCurrency, String toCurrency) throws IOException {
-        HashSet<String> currencyCodes = CurrencyCodes.getCurrencyCodeSet();
-        if(!currencyCodes.contains(fromCurrency)) {
-            throw new IllegalArgumentException(String.format("%s currency is not supported for now", fromCurrency));
-        }
+    public BigDecimal calculateRateBetweenCurrencies(CurrencyEnum baseCurrency, CurrencyEnum targetCurrency) throws IOException {
+        currencyValidation(baseCurrency, targetCurrency);
 
-        if(!currencyCodes.contains(toCurrency)) {
-            throw new IllegalArgumentException(String.format("%s currency is not supported for now", fromCurrency));
-        }
+        BigDecimal fromRateWithEUR = getRateByBaseCurrencyAndTargetCurrencyAndDate(EUR, baseCurrency, LocalDate.now());
+        BigDecimal toRateWithEUR = getRateByBaseCurrencyAndTargetCurrencyAndDate(EUR, targetCurrency, LocalDate.now());
 
-        BigDecimal eurRate = getRateByFromCurrencyCodeAndToCurrencyCodeAndDate(EUR.getCode(), EUR.getCode(), LocalDate.now());
-        BigDecimal fromRateWithEUR = getRateByFromCurrencyCodeAndToCurrencyCodeAndDate(EUR.getCode(), fromCurrency, LocalDate.now());
-        BigDecimal toRateWithEUR = getRateByFromCurrencyCodeAndToCurrencyCodeAndDate(EUR.getCode(), toCurrency, LocalDate.now());
-
-        BigDecimal firstRate = eurRate.divide(fromRateWithEUR, RoundingMode.CEILING);
-        return firstRate.multiply(toRateWithEUR);
-
+        return toRateWithEUR.divide(fromRateWithEUR, RoundingMode.HALF_EVEN).setScale(6, RoundingMode.HALF_EVEN);
     }
 
     @Cacheable
-    public List<ExchangeRateDto> findByFromCurrencyCodeAndDate(String currencyCode, LocalDate date){
-        List<ExchangeRate> exchangeRates = exchangeRateRepository.findByFromCurrencyCodeAndDate(currencyCode, date);
+    public List<ExchangeRateDto> findByTargetCurrencyAndDate(CurrencyEnum currencyCode, LocalDate date){
+        List<ExchangeRate> exchangeRates = exchangeRateRepository.findByBaseCurrencyAndDate(currencyCode, date);
         if( null != exchangeRates )
             return exchangeRates.stream().map(ExchangeRateDto::new).collect(Collectors.toList());
 
@@ -95,13 +88,32 @@ public class ExchangeRateService {
     }
 
     @Cacheable
-    public BigDecimal getRateByFromCurrencyCodeAndToCurrencyCodeAndDate(String fromCurrencyCode, String toCurrencyCode, LocalDate date) throws IOException {
-        ExchangeRate exchangeRate = exchangeRateRepository.findByFromCurrencyCodeAndToCurrencyCodeAndDate(fromCurrencyCode, toCurrencyCode, date);
+    public BigDecimal getRateByBaseCurrencyAndTargetCurrencyAndDate(CurrencyEnum baseCurrency, CurrencyEnum targetCurrency, LocalDate date) throws IOException {
+        currencyValidation(baseCurrency, targetCurrency);
+
+        ExchangeRate exchangeRate = exchangeRateRepository.findByBaseCurrencyAndTargetCurrencyAndDate(baseCurrency, targetCurrency, date);
         if (null == exchangeRate) {
             retrieveAndSaveExchangeRates();
-            exchangeRate = exchangeRateRepository.findByFromCurrencyCodeAndToCurrencyCodeAndDate(fromCurrencyCode, toCurrencyCode, date);
+            exchangeRate = exchangeRateRepository.findByBaseCurrencyAndTargetCurrencyAndDate(baseCurrency, targetCurrency, date);
         }
         return exchangeRate.getRate();
+    }
+
+    private void currencyValidation(CurrencyEnum baseCurrency, CurrencyEnum targetCurrency){
+        HashSet<CurrencyEnum> currencyCodes = CurrencyEnum.getCurrencySet();
+
+        if(baseCurrency == null) {
+            throw new IllegalArgumentException("From Currency must be provided!");
+        }
+        if(targetCurrency == null) {
+            throw new IllegalArgumentException("To Currency must be provided!");
+        }
+        if(!currencyCodes.contains(baseCurrency)) {
+            throw new IllegalArgumentException(String.format("%s currency is not supported for now", baseCurrency));
+        }
+        if(!currencyCodes.contains(targetCurrency)) {
+            throw new IllegalArgumentException(String.format("%s currency is not supported for now", baseCurrency));
+        }
     }
 
 }

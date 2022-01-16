@@ -1,8 +1,8 @@
 package com.cac.exchangerates.controller;
 
 import com.cac.exchangerates.dto.ConversionRequestDto;
-import com.cac.exchangerates.models.ConversionRequest;
 import com.cac.exchangerates.service.ConversionRequestService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -26,9 +26,15 @@ public class ConversionRequestController {
 
     @GetMapping("/conversions")
     public ResponseEntity<List<ConversionRequestDto>> getConversionRequestList(@RequestParam(value = "id", required = false) String id,
-                                                                              @RequestParam(value = "date", required = false)
-                                                               @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-                                                                              @RequestParam(name = "page", defaultValue = "0", required = false) int page, @RequestParam(name = "size", defaultValue = "10", required = false) int size) {
+                                                                               @RequestParam(value = "date", required = false)
+                                                                               @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                                                                               @RequestParam(name = "page", defaultValue = "0", required = false) int page,
+                                                                               @RequestParam(name = "size", defaultValue = "10", required = false) int size) {
+
+        if (StringUtils.isBlank(id) && null == date) {
+            throw new IllegalArgumentException("Transaction ID or Transaction Date must be provided!");
+        }
+
         List<ConversionRequestDto> conversionList = conversionRequestService.getConversionRequestByIdOrDate(id, date, PageRequest.of(page, size));
         return new ResponseEntity<List<ConversionRequestDto>>(conversionList, HttpStatus.OK);
     }

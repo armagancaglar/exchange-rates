@@ -1,11 +1,11 @@
 package com.cac.exchangerates.dto;
 
+import com.cac.exchangerates.constants.CurrencyEnum;
 import com.cac.exchangerates.models.ConversionRequest;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.tomcat.jni.Local;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,26 +16,30 @@ import java.time.LocalDate;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ConversionRequestDto {
     private String id;
-    private String fromCurrency;
-    private String toCurrency;
+    private CurrencyEnum baseCurrency;
+    private CurrencyEnum targetCurrency;
     private LocalDate date;
+    private BigDecimal rate;
     private BigDecimal amount;
-    private BigDecimal conversion;
+    private BigDecimal price;
 
-    public ConversionRequestDto(String fromCurrency, String toCurrency, LocalDate date, BigDecimal amount, BigDecimal conversion) {
-        this.fromCurrency = fromCurrency;
-        this.toCurrency = toCurrency;
+    public ConversionRequestDto(CurrencyEnum baseCurrency, CurrencyEnum targetCurrency, LocalDate date, BigDecimal rate,
+                                BigDecimal amount, BigDecimal price) {
+        this.baseCurrency = baseCurrency;
+        this.targetCurrency = targetCurrency;
         this.date = date;
+        this.rate = rate;
         this.amount = amount;
-        this.conversion = conversion;
+        this.price = price;
     }
 
     public ConversionRequestDto(ConversionRequest conversionRequest) {
         this.id = conversionRequest.getId();
-        this.fromCurrency = conversionRequest.getFromCurrency();
-        this.toCurrency = conversionRequest.getToCurrency();
+        this.baseCurrency = conversionRequest.getBaseCurrency();
+        this.targetCurrency = conversionRequest.getTargetCurrency();
         this.date = conversionRequest.getDate();
+        this.rate = conversionRequest.getRate();
         this.amount = conversionRequest.getAmount();
-        this.conversion = conversionRequest.getConversion();
+        this.price = conversionRequest.getPrice();
     }
 }

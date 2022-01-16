@@ -1,5 +1,7 @@
 package com.cac.exchangerates.controller;
 
+import com.cac.exchangerates.constants.CurrencyEnum;
+import com.cac.exchangerates.dto.ConversionResponseDto;
 import com.cac.exchangerates.service.ExchangeRateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,14 +22,14 @@ public class ExchangeRateController {
     }
 
     @GetMapping("/exchange-rate")
-    public ResponseEntity<BigDecimal> getExchangeRateBetweenTwoCurrency(@RequestParam("from") String fromCurrency, @RequestParam("to") String toCurrency) throws IOException {
-        BigDecimal rate = exchangeRateService.calculateRateBetweenCurrencies(fromCurrency.toUpperCase(), toCurrency.toUpperCase());
+    public ResponseEntity<BigDecimal> getExchangeRateBetweenTwoCurrency(@RequestParam("from") CurrencyEnum baseCurrency, @RequestParam("to") CurrencyEnum targetCurrency) throws IOException {
+        BigDecimal rate = exchangeRateService.calculateRateBetweenCurrencies(baseCurrency, targetCurrency);
         return new ResponseEntity<BigDecimal>(rate, HttpStatus.OK);
     }
 
     @GetMapping("/convert")
-    public ResponseEntity<BigDecimal> convertAmountBetweenCurrencies(@RequestParam("from") String fromCurrency, @RequestParam("to") String toCurrency, @RequestParam("amount") BigDecimal amount) throws IOException {
-        BigDecimal conversion =  exchangeRateService.convertAmountBetweenCurrencies(fromCurrency.toUpperCase(), toCurrency.toUpperCase(), amount);
-        return new ResponseEntity<BigDecimal>(conversion, HttpStatus.OK);
+    public ResponseEntity<ConversionResponseDto> convertAmountBetweenCurrencies(@RequestParam("from") CurrencyEnum baseCurrency, @RequestParam("to") CurrencyEnum targetCurrency, @RequestParam("amount") BigDecimal amount) throws IOException {
+        ConversionResponseDto conversion =  exchangeRateService.convertAmountBetweenCurrencies(baseCurrency, targetCurrency, amount);
+        return new ResponseEntity<ConversionResponseDto>(conversion, HttpStatus.OK);
     }
 }

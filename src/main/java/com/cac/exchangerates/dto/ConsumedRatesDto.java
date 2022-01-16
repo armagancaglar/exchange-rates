@@ -1,5 +1,6 @@
 package com.cac.exchangerates.dto;
 
+import com.cac.exchangerates.constants.CurrencyEnum;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -21,9 +22,9 @@ import java.util.HashMap;
 public class ConsumedRatesDto {
     private boolean success;
     private Timestamp timestamp;
-    private String base;
+    private CurrencyEnum base;
     @JsonSerialize(using = LocalDateSerializer.class)
     @JsonDeserialize(using = LocalDateDeserializer.class)
     private LocalDate date;
-    private HashMap<String, BigDecimal> rates;
+    private HashMap<CurrencyEnum, BigDecimal> rates;
 }
