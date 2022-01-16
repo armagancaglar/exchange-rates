@@ -15,6 +15,8 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 
+import static com.cac.exchangerates.constants.CurrencyEnum.EUR;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -36,4 +38,9 @@ public class ExchangeRateDto {
         this.rate = exchangeRate.getRate();
     }
 
+    public ExchangeRateDto(ConsumedRatesDto consumedRatesDto) {
+        this.timestamp = consumedRatesDto.getTimestamp();
+        this.baseCurrency = consumedRatesDto.getBase() == null ? EUR : consumedRatesDto.getBase();
+        this.date = consumedRatesDto.getDate();
+    }
 }
