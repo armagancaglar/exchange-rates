@@ -8,10 +8,12 @@ import com.cac.exchangerates.dto.ExchangeRateDto;
 import com.cac.exchangerates.models.ExchangeRate;
 import com.cac.exchangerates.repository.ExchangeRateRepository;
 import com.cac.exchangerates.service.ExchangeRateService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -50,7 +52,7 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
     /**
      * The method is for the retrieving the currency rates from external service provider
      */
-    public void retrieveAndSaveExchangeRates() {
+    public void retrieveAndSaveExchangeRates() throws IOException {
         List<ExchangeRateDto> exchangeRateDtos = findByTargetCurrencyAndDate(EUR, LocalDate.now());
 
         if (null == exchangeRateDtos || exchangeRateDtos.isEmpty()) {
@@ -69,15 +71,16 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
 
     /**
      * The method calculates the amount in target currency
-     * @param baseCurrency
-     * @param targetCurrency
+     * @param baseCurrencyCode
+     * @param targetCurrencyCode
      * @param amount
      * @return
      */
-    public ConversionResponseDto convertAmountBetweenCurrencies(CurrencyEnum baseCurrency, CurrencyEnum targetCurrency, BigDecimal amount) {
-        currencyValidation(baseCurrency, targetCurrency);
+    public ConversionResponseDto convertAmountBetweenCurrencies(String baseCurrencyCode, String targetCurrencyCode, BigDecimal amount) throws IOException {
+        CurrencyEnum baseCurrency = validateAndGetCurrencyEnum(baseCurrencyCode);
+        CurrencyEnum targetCurrency = validateAndGetCurrencyEnum(targetCurrencyCode);
 
-        BigDecimal rate = calculateRateBetweenCurrencies(baseCurrency, targetCurrency);
+        BigDecimal rate = calculateRateBetweenCurrencies(baseCurrencyCode, targetCurrencyCode);
 
         BigDecimal conversionPrice = rate.multiply(amount).setScale(6, RoundingMode.HALF_EVEN);
         ConversionRequestDto conversionRequestDto = new ConversionRequestDto(baseCurrency, targetCurrency, LocalDate.now(), rate, amount, conversionPrice);
@@ -88,12 +91,13 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
 
     /**
      * The method calculates the rate between base currency and target currency
-     * @param baseCurrency
-     * @param targetCurrency
+     * @param baseCurrencyCode
+     * @param targetCurrencyCode
      * @return
      */
-    public BigDecimal calculateRateBetweenCurrencies(CurrencyEnum baseCurrency, CurrencyEnum targetCurrency) {
-        currencyValidation(baseCurrency, targetCurrency);
+    public BigDecimal calculateRateBetweenCurrencies(String baseCurrencyCode, String targetCurrencyCode) throws IOException {
+        CurrencyEnum baseCurrency = validateAndGetCurrencyEnum(baseCurrencyCode);
+        CurrencyEnum targetCurrency = validateAndGetCurrencyEnum(targetCurrencyCode);
 
         BigDecimal fromRateWithEUR = getRateByBaseCurrencyAndTargetCurrencyAndDate(baseCurrency, LocalDate.now());
         BigDecimal toRateWithEUR = getRateByBaseCurrencyAndTargetCurrencyAndDate(targetCurrency, LocalDate.now());
@@ -126,8 +130,7 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
     // getRateByBaseCurrencyAndTargetCurrencyAndDate(CurrencyEnum baseCurrency, CurrencyEnum targetCurrency, LocalDate date)
     // At this point baseCurrency argument is not necessary because the data is provided for just EUR
     @Cacheable
-    public BigDecimal getRateByBaseCurrencyAndTargetCurrencyAndDate(CurrencyEnum targetCurrency, LocalDate date) {
-        currencyValidation(EUR, targetCurrency);
+    public BigDecimal getRateByBaseCurrencyAndTargetCurrencyAndDate(CurrencyEnum targetCurrency, LocalDate date) throws IOException {
 
         ExchangeRate exchangeRate = exchangeRateRepository.findByBaseCurrencyAndTargetCurrencyAndDate(EUR, targetCurrency, date);
         if (null == exchangeRate) {
@@ -137,25 +140,19 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
         return exchangeRate.getRate();
     }
 
+
     /**
      * The methods to check if the currencies are exists
-     *
-     * @param baseCurrency
-     * @param targetCurrency
+     * @param currencyCode
      */
-    public void currencyValidation(CurrencyEnum baseCurrency, CurrencyEnum targetCurrency) {
-        HashSet<CurrencyEnum> currencyCodes = CurrencyEnum.getCurrencySet();
-        if (baseCurrency == null) {
-            throw new IllegalArgumentException("From Currency must be provided!");
+    public CurrencyEnum validateAndGetCurrencyEnum(String currencyCode) {
+        if(StringUtils.isBlank(currencyCode)) {
+            throw new IllegalArgumentException("Currency code can not be empty!");
         }
-        if (targetCurrency == null) {
-            throw new IllegalArgumentException("To Currency must be provided!");
-        }
-        if (!currencyCodes.contains(baseCurrency)) {
-            throw new IllegalArgumentException(String.format("%s currency is not supported for now", baseCurrency));
-        }
-        if (!currencyCodes.contains(targetCurrency)) {
-            throw new IllegalArgumentException(String.format("%s currency is not supported for now", baseCurrency));
+        try {
+            return CurrencyEnum.valueOf(currencyCode.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(String.format("%s currency is not supported", currencyCode));
         }
     }
 }

@@ -18,8 +18,6 @@ import java.util.List;
 
 @RestController
 public class ConversionRequestController extends AbstractController{
-    Logger logger = LogManager.getLogger();
-
     private final ConversionRequestService conversionRequestService;
 
     @Autowired

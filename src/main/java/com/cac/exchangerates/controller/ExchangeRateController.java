@@ -1,6 +1,5 @@
 package com.cac.exchangerates.controller;
 
-import com.cac.exchangerates.constants.CurrencyEnum;
 import com.cac.exchangerates.dto.ConversionResponseDto;
 import com.cac.exchangerates.dto.RestResourceResponse;
 import com.cac.exchangerates.service.ExchangeRateService;
@@ -24,7 +23,7 @@ public class ExchangeRateController extends AbstractController{
     }
 
     @GetMapping("/exchange-rate")
-    public RestResourceResponse getExchangeRateBetweenTwoCurrency(@RequestParam("from") CurrencyEnum baseCurrency, @RequestParam("to") CurrencyEnum targetCurrency) {
+    public RestResourceResponse getExchangeRateBetweenTwoCurrency(@RequestParam("from") String baseCurrency, @RequestParam("to") String targetCurrency) {
         try {
             BigDecimal rate = exchangeRateService.calculateRateBetweenCurrencies(baseCurrency, targetCurrency);
             return createSuccessResponse(rate);
@@ -34,7 +33,7 @@ public class ExchangeRateController extends AbstractController{
     }
 
     @GetMapping("/convert")
-    public RestResourceResponse convertAmountBetweenCurrencies(@RequestParam("from") CurrencyEnum baseCurrency, @RequestParam("to") CurrencyEnum targetCurrency, @RequestParam("amount") BigDecimal amount) {
+    public RestResourceResponse convertAmountBetweenCurrencies(@RequestParam("from") String baseCurrency, @RequestParam("to") String targetCurrency, @RequestParam("amount") BigDecimal amount) {
         try {
             ConversionResponseDto conversion =  exchangeRateService.convertAmountBetweenCurrencies(baseCurrency, targetCurrency, amount);
             return createSuccessResponse(conversion);
