@@ -3,6 +3,7 @@ package com.cac.exchangerates.models;
 import com.cac.exchangerates.constants.CurrencyEnum;
 import com.cac.exchangerates.dto.ConversionRequestDto;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
@@ -39,7 +40,7 @@ public class ConversionRequest {
     }
 
     public ConversionRequest(ConversionRequestDto conversionRequestDto) {
-        setId(UUID.randomUUID().toString());
+        setId(StringUtils.isNotBlank(conversionRequestDto.getId()) ? conversionRequestDto.getId() : UUID.randomUUID().toString());
         this.baseCurrency = conversionRequestDto.getBaseCurrency();
         this.targetCurrency = conversionRequestDto.getTargetCurrency();
         this.date = conversionRequestDto.getDate();

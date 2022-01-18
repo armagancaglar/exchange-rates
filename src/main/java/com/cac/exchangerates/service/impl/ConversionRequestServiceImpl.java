@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,9 +31,7 @@ public class ConversionRequestServiceImpl implements ConversionRequestService {
      * @return
      */
     public ConversionRequestDto save(ConversionRequestDto conversionRequestDto) {
-        if (null == conversionRequestDto) {
-            throw new IllegalArgumentException("ConversionRequest must be provided!");
-        }
+        conversionRequestValidation(conversionRequestDto);
         ConversionRequest conversionRequest = new ConversionRequest(conversionRequestDto);
         conversionRequest = conversionRequestRepository.save(conversionRequest);
         return new ConversionRequestDto(conversionRequest);
@@ -50,6 +49,36 @@ public class ConversionRequestServiceImpl implements ConversionRequestService {
             throw new IllegalArgumentException("Transaction ID or Transaction Date must be provided!");
         }
         return conversionRequestRepository.findByIdOrDate(id, date, pageable).map(ConversionRequestDto::new).stream().collect(Collectors.toList());
+    }
+
+    public void conversionRequestValidation(ConversionRequestDto conversionRequestDto) {
+        if(null == conversionRequestDto) {
+            throw new IllegalArgumentException("ConversionRequest must be provided!");
+        }
+        if(conversionRequestDto.getAmount() == null){
+            throw new IllegalArgumentException("Amount must be provided!");
+        }
+        if(conversionRequestDto.getAmount().compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("The amount of the conversion can not be less than 0!");
+        }
+        if(conversionRequestDto.getBaseCurrency() == null) {
+            throw new IllegalArgumentException("Base Currency must be provided!");
+        }
+        if(conversionRequestDto.getTargetCurrency() == null) {
+            throw new IllegalArgumentException("Target Currency must be provided!");
+        }
+        if(conversionRequestDto.getRate() == null) {
+            throw new IllegalArgumentException("Rate must be provided!");
+        }
+        if(conversionRequestDto.getRate().compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("The rate can not be less than 0!");
+        }
+        if(conversionRequestDto.getPrice() == null) {
+            throw new IllegalArgumentException("Price must be provided!");
+        }
+        if(conversionRequestDto.getPrice().compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("The price can not be less than 0!");
+        }
     }
 
 }

@@ -9,4 +9,5 @@ import java.util.List;
 public interface ConversionRequestService {
     ConversionRequestDto save(ConversionRequestDto conversionRequestDto);
     List<ConversionRequestDto> getConversionRequestByIdOrDate(String id, LocalDate date, Pageable pageable);
+    void conversionRequestValidation(ConversionRequestDto conversionRequestDto);
 }
