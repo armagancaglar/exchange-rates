@@ -10,6 +10,6 @@ import java.util.List;
 
 @Repository
 public interface ExchangeRateRepository extends JpaRepository<ExchangeRate, Long> {
-    List<ExchangeRate> findByBaseCurrencyAndDate(CurrencyEnum currencyCode, LocalDate date);
+    List<ExchangeRate> findByTargetCurrencyAndDate(CurrencyEnum currencyCode, LocalDate date);
     ExchangeRate findByBaseCurrencyAndTargetCurrencyAndDate(CurrencyEnum baseCurrency, CurrencyEnum targetCurrency, LocalDate date);
 }

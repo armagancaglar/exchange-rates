@@ -20,8 +20,11 @@ public class ConversionRequest {
     private CurrencyEnum baseCurrency;
     private CurrencyEnum targetCurrency;
     private LocalDate date;
+    @Column(scale = 6)
     private BigDecimal rate;
+    @Column(scale = 6)
     private BigDecimal amount;
+    @Column(scale = 6)
     private BigDecimal price;
 
     public ConversionRequest(){

@@ -1,9 +1,13 @@
 package com.cac.exchangerates.constants;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.HashSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Schema(name = "CurrencyEnum", description = "The currency list that can be used on apis")
 public enum CurrencyEnum {
     AED("AED"), AFN("AFN"), ALL("ALL"), AMD("AMD"), ANG("ANG"),
     AOA("AOA"), ARS("ARS"), AUD("AUD"), AWG("AWG"), AZN("AZN"),
@@ -59,5 +63,21 @@ public enum CurrencyEnum {
 
     public static HashSet<CurrencyEnum> getCurrencySet(){
         return Stream.of(CurrencyEnum.values()).collect(Collectors.toCollection(HashSet::new));
+    }
+
+    /**
+     * The methods to check if the currencies are exists
+     *
+     * @param currencyCode
+     */
+    public static CurrencyEnum validateAndGetCurrencyEnum(String currencyCode) {
+        if (StringUtils.isBlank(currencyCode)) {
+            throw new IllegalArgumentException("Currency code can not be empty!");
+        }
+        try {
+            return CurrencyEnum.valueOf(currencyCode.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(String.format("%s currency is not supported", currencyCode));
+        }
     }
 }

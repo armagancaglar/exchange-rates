@@ -3,6 +3,7 @@ package com.cac.exchangerates.models;
 import com.cac.exchangerates.constants.CurrencyEnum;
 import com.cac.exchangerates.dto.ConsumedRatesDto;
 import com.cac.exchangerates.dto.ExchangeRateDto;
+import io.swagger.v3.oas.annotations.media.Content;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -28,6 +29,7 @@ public class ExchangeRate {
     private LocalDate date;
     private CurrencyEnum baseCurrency;
     private CurrencyEnum targetCurrency;
+    @Column(scale = 6)
     private BigDecimal rate;
 
     public ExchangeRate(ConsumedRatesDto consumedRatesDto) {
